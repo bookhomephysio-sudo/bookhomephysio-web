@@ -10,7 +10,7 @@ export default async function BookPage({
 
   const { data: physio } = await supabase
     .from("profiles")
-    .select("id, full_name, bio, services(id, name, price, duration_minutes)")
+    .select("id, full_name, bio, services(id, name, price, duration_minutes), reviews(rating, comment, created_at)")
     .eq("id", physioId)
     .single();
 
@@ -21,6 +21,21 @@ export default async function BookPage({
       <h1 className="text-3xl font-bold text-slate-900">Book {physio.full_name}</h1>
       <p className="mt-1 text-slate-600">{physio.bio}</p>
       <BookingForm physioId={physio.id} services={physio.services} />
+
+      {(physio.reviews ?? []).length > 0 && (
+        <section className="mt-10 max-w-lg">
+          <h2 className="text-xl font-bold text-slate-900">Patient reviews</h2>
+          <div className="mt-4 space-y-4">
+            {physio.reviews.map((r: any, i: number) => (
+              <div key={i} className="rounded-2xl bg-white p-5 shadow">
+                <span className="text-amber-400">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
+                <p className="mt-1 text-sm text-slate-600">{r.comment || `Rated ${r.rating} stars.`}</p>
+                <p className="mt-1 text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
