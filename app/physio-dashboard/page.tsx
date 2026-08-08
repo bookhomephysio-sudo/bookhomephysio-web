@@ -31,6 +31,8 @@ export default function PhysioDashboard() {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [rate, setRate] = useState("");
+  const [quals, setQs] = useState("");
+  const [exp, setExp] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = async (id: string) => {
@@ -51,6 +53,8 @@ export default function PhysioDashboard() {
     setName(prof.data?.full_name ?? "");
     setBio(prof.data?.bio ?? "");
     setRate(String(prof.data?.hourly_rate ?? ""));
+        setQs(prof.data?.qualifications ?? "");
+    setExp(prof.data?.experience_years != null ? String(prof.data.experience_years) : "");
   };
 
   useEffect(() => {
@@ -76,7 +80,7 @@ export default function PhysioDashboard() {
 
   const saveProfile = async () => {
     const { error } = await supabase.from("profiles")
-      .update({ full_name: name, bio, hourly_rate: Number(rate) })
+      .update({ bio, hourly_rate: Number(rate), qualifications: quals, experience_years: exp ? Number(exp) : null })
       .eq("id", uid!);
     if (error) return alert(error.message);
     setEditing(false);
@@ -192,8 +196,13 @@ export default function PhysioDashboard() {
             </div>
             {editing ? (
               <div className="mt-4 space-y-3">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name"
+                                <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                  🔒 {profile?.full_name} — name is locked to your verified identity
+                </p>
+                <input value={quals} onChange={(e) => setQs(e.target.value)} placeholder="Degrees, e.g. BPT, MPT (Orthopedics)"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                <input type="number" value={exp} onChange={(e) => setExp(e.target.value)} placeholder="Years of experience"
+                  className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                 <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Bio"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                 <input type="number" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="Base rate ₹"
@@ -206,6 +215,7 @@ export default function PhysioDashboard() {
             ) : (
               <div className="mt-3 text-sm text-slate-600">
                 <p className="font-medium text-slate-900">{profile?.full_name} · ₹{profile?.hourly_rate}/session</p>
+                <p className="mt-1 text-slate-700">{profile?.qualifications}{profile?.experience_years ? ` · ${profile.experience_years} yrs experience` : ""}</p>
                 <p className="mt-1">{profile?.bio}</p>
                 <a href="/practice"
                   className="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">
