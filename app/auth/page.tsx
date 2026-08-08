@@ -45,6 +45,7 @@ export default function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
+        <img src="/logo.png" alt="BookHomePhysio" className="mx-auto mb-4 h-24 w-auto" />
         <h1 className="text-center text-2xl font-bold text-slate-900">
           {isLogin ? "Welcome back" : "Create your account"}
         </h1>

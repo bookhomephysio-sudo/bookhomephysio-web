@@ -4,6 +4,7 @@ export default function Home() {
   return (
     <main className="bg-slate-50">
       <section className="mx-auto max-w-6xl px-6 py-20 text-center">
+        <img src="/logo.png" alt="BookHomePhysio" className="mx-auto mb-8 h-32 w-auto" />
         <h1 className="text-4xl font-extrabold text-slate-900 sm:text-5xl">
           Expert Physiotherapy, <span className="text-teal-600">At Your Home</span>
         </h1>
