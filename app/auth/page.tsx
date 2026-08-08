@@ -1,45 +1,46 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthPage() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [asPhysio, setAsPhysio] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  // Send physios to dashboard, patients to the search page
-  const redirectByRole = async (userId: string) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-    window.location.href = profile?.role === "physio" ? "/dashboard" : "/physios";
+  const redirectByRole = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return router.push("/physios");
+    const { data: prof } = await supabase
+      .from("profiles").select("role, kyc_status").eq("id", session.user.id).single();
+    if (prof?.role === "admin") router.push("/admin");
+    else if (prof?.role === "physio") router.push(prof.kyc_status === "approved" ? "/physio-dashboard" : "/onboard");
+    else router.push("/bookings");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
+  const submit = async () => {
+    setBusy(true);
+    setMsg("");
     if (isLogin) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
-      else await redirectByRole(data.user!.id);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) { setMsg(error.message); setBusy(false); return; }
     } else {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } },
+        options: { data: { full_name: fullName, role: asPhysio ? "physio" : "patient" } },
       });
-      if (error) setError(error.message);
-      else if (data.user) await redirectByRole(data.user.id);
+      if (error) { setMsg(error.message); setBusy(false); return; }
+      await supabase.auth.signInWithPassword({ email, password });
     }
-    setLoading(false);
+    await redirectByRole();
+    setBusy(false);
   };
 
   return (
@@ -49,52 +50,34 @@ export default function AuthPage() {
         <h1 className="text-center text-2xl font-bold text-slate-900">
           {isLogin ? "Welcome back" : "Create your account"}
         </h1>
-        <p className="mt-1 text-center text-sm text-slate-500">BookHomePhysio</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <div className="mt-6 space-y-4">
           {!isLogin && (
-            <input
-              type="text"
-              placeholder="Full name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+            <>
+              <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name"
+                className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm" />
+              <label className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5 text-sm text-teal-800">
+                <input type="checkbox" checked={asPhysio} onChange={(e) => setAsPhysio(e.target.checked)} />
+                I'm a physiotherapist — I want to offer services
+              </label>
+            </>
           )}
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-          />
-          <input
-            type="password"
-            placeholder="Password (min 6 characters)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-teal-600 py-2 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
-          >
-            {loading ? "Please wait..." : isLogin ? "Log in" : "Sign up"}
+          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email"
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm" />
+          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password"
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm" />
+          <button onClick={submit} disabled={busy}
+            className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-50">
+            {busy ? "Please wait…" : isLogin ? "Log in" : "Sign up"}
           </button>
-        </form>
-
-        {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
-
-        <button
-          onClick={() => { setIsLogin(!isLogin); setError(""); }}
-          className="mt-4 w-full text-center text-sm text-teal-600 hover:underline"
-        >
-          {isLogin ? "New here? Create an account" : "Already have an account? Log in"}
-        </button>
+          {msg && <p className="text-center text-sm text-red-600">{msg}</p>}
+          <p className="text-center text-sm text-slate-500">
+            {isLogin ? "New here?" : "Already have an account?"}{" "}
+            <button onClick={() => setIsLogin(!isLogin)} className="font-medium text-teal-700 hover:underline">
+              {isLogin ? "Create an account" : "Log in"}
+            </button>
+          </p>
+        </div>
       </div>
     </main>
   );

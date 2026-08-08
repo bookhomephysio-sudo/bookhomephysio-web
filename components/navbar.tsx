@@ -7,19 +7,23 @@ import { supabase } from "@/lib/supabase";
 export default function Navbar() {
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [kyc, setKyc] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchProfile = async (uid: string) => {
+      const { data: prof } = await supabase
+        .from("profiles").select("role, kyc_status").eq("id", uid).single();
+      setRole(prof?.role ?? null);
+      setKyc(prof?.kyc_status ?? null);
+    };
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUserId(session?.user.id ?? null);
-      if (session) {
-        const { data: prof } = await supabase
-          .from("profiles").select("role").eq("id", session.user.id).single();
-        setRole(prof?.role ?? null);
-      }
-      const { data: listener } = supabase.auth.onAuthStateChange((_e, sess) => {
+      if (session) await fetchProfile(session.user.id);
+      const { data: listener } = supabase.auth.onAuthStateChange(async (_e, sess) => {
         setUserId(sess?.user.id ?? null);
-        if (!sess) setRole(null);
+        if (!sess) { setRole(null); setKyc(null); }
+        else await fetchProfile(sess.user.id);
       });
       return () => listener.subscription.unsubscribe();
     })();
@@ -38,14 +42,20 @@ export default function Navbar() {
         </Link>
         <div className="flex items-center gap-5 text-sm font-medium text-slate-700">
           <Link href="/physios" className="hover:text-teal-700">Find Physios</Link>
-          {userId && role !== "physio" && (
+          {userId && role !== "physio" && role !== "admin" && (
             <Link href="/bookings" className="hover:text-teal-700">My Bookings</Link>
           )}
-          {userId && role === "physio" && (
+          {userId && role === "physio" && kyc === "approved" && (
             <Link href="/physio-dashboard" className="hover:text-teal-700">Dashboard</Link>
           )}
-          {userId && role === "physio" && (
+          {userId && role === "physio" && kyc === "approved" && (
             <Link href="/practice" className="hover:text-teal-700">My Practice</Link>
+          )}
+          {userId && role === "physio" && kyc !== "approved" && (
+            <Link href="/onboard" className="hover:text-teal-700">Onboarding</Link>
+          )}
+          {userId && role === "admin" && (
+            <Link href="/admin" className="hover:text-teal-700">Admin</Link>
           )}
           {userId ? (
             <button onClick={logout} className="rounded-lg bg-slate-100 px-4 py-2 hover:bg-slate-200">Logout</button>

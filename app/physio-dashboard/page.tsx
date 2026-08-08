@@ -98,7 +98,10 @@ export default function PhysioDashboard() {
 
   return (
     <main className="min-h-screen bg-slate-50 p-8">
-      <h1 className="text-3xl font-bold text-slate-900">Welcome, {profile?.full_name}</h1>
+            <div className="flex items-center gap-4">
+        {profile?.avatar_url && <img src={profile.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />}
+        <h1 className="text-3xl font-bold text-slate-900">Welcome, {profile?.full_name}</h1>
+      </div>
       <p className="mt-1 text-slate-600">Your practice at a glance.</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-4">

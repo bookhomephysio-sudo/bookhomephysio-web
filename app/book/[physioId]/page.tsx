@@ -18,7 +18,10 @@ export default async function BookPage({
 
   return (
     <main className="min-h-screen bg-slate-50 p-8">
-      <h1 className="text-3xl font-bold text-slate-900">Book {physio.full_name}</h1>
+            <div className="flex items-center gap-4">
+        {physio.avatar_url && <img src={physio.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />}
+        <h1 className="text-3xl font-bold text-slate-900">Book {physio.full_name}</h1>
+      </div>
       <p className="mt-1 text-sm font-medium text-slate-500">{physio.qualifications}{physio.experience_years ? ` · ${physio.experience_years} yrs experience` : ""}</p>
       <p className="mt-1 text-slate-600">{physio.bio}</p>
       <BookingForm physioId={physio.id} services={physio.services} areas={physio.service_areas} packages={physio.packages} />

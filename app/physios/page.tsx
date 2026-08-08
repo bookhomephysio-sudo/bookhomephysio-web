@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 export default async function PhysiosPage() {
   const { data: physios, error } = await supabase
     .from("profiles")
-        .select("id, full_name, bio, hourly_rate, rating, qualifications, experience_years, services(name, price, duration_minutes), reviews!reviews_physio_id_fkey(rating)")
+        .select("id, full_name, bio, avatar_url, hourly_rate, rating, qualifications, experience_years, services(name, price, duration_minutes), reviews!reviews_physio_id_fkey(rating)")
     .eq("role", "physio")
     .eq("kyc_status", "approved");
 
@@ -21,7 +21,14 @@ export default async function PhysiosPage() {
           {(physios ?? []).map((p: any) => (
             <div key={p.id} className="rounded-2xl bg-white p-6 shadow">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">{p.full_name}</h2>
+                                <div className="flex items-center gap-3">
+                  {p.avatar_url ? (
+                    <img src={p.avatar_url} alt={p.full_name} className="h-11 w-11 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-100 font-semibold text-teal-700">{p.full_name?.[0]}</div>
+                  )}
+                  <h2 className="text-lg font-semibold text-slate-900">{p.full_name}</h2>
+                </div>
                 <span className="text-sm text-amber-500">
                   ★ {Number(p.rating).toFixed(1)} ({p.reviews.length})
                 </span>
