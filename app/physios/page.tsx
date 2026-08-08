@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 export default async function PhysiosPage() {
   const { data: physios, error } = await supabase
     .from("profiles")
-    .select("id, full_name, bio, hourly_rate, rating, services(name, price, duration_minutes), reviews(rating)")
+    .select("id, full_name, bio, hourly_rate, rating, services(name, price, duration_minutes), reviews!reviews_physio_id_fkey(rating)")
     .eq("role", "physio")
     .eq("kyc_status", "approved");
 

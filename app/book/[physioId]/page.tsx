@@ -10,7 +10,7 @@ export default async function BookPage({
 
   const { data: physio } = await supabase
     .from("profiles")
-    .select("id, full_name, bio, services(id, name, price, duration_minutes), reviews(rating, comment, created_at)")
+    .select("id, full_name, bio, services(id, name, price, duration_minutes), reviews!reviews_physio_id_fkey(rating, comment, created_at)")
     .eq("id", physioId)
     .single();
 
