@@ -1,6 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import AreaFilter from "./area-filter";
-
+export const metadata = {
+  title: "Find Verified Home Physiotherapists",
+  description: "Browse verified home-visit physiotherapists with real patient reviews, transparent pricing and instant booking in Chandigarh, Mohali & Panchkula.",
+};
 export const dynamic = "force-dynamic";
 
 export default async function PhysiosPage({
