@@ -10,6 +10,11 @@ export default function OnboardPage() {
   const [exp, setExp] = useState("");
   const [bio, setBio] = useState("");
   const [rate, setRate] = useState("");
+  const [phone, setPhone] = useState("");
+  const [citySel, setCitySel] = useState("");
+  const [otherCity, setOtherCity] = useState("");
+  const [addr, setAddr] = useState("");
+  const [cities, setCities] = useState<string[]>([]);
   const [avatar, setAvatar] = useState("");
   const [govId, setGovId] = useState("");
   const [cert, setCert] = useState("");
@@ -23,6 +28,11 @@ export default function OnboardPage() {
     setExp(data?.experience_years != null ? String(data.experience_years) : "");
     setBio(data?.bio ?? "");
     setRate(data?.hourly_rate != null ? String(data.hourly_rate) : "");
+    setPhone(data?.phone ?? "");
+    setAddr(data?.address ?? "");
+    setCitySel(data?.city ?? "");
+    const { data: ar } = await supabase.from("areas").select("city");
+    setCities(Array.from(new Set((ar ?? []).map((a: any) => a.city)) as string[]));
   };
 
   useEffect(() => {
@@ -48,6 +58,8 @@ export default function OnboardPage() {
   const submit = async () => {
     if (!avatar || !govId || !cert) return setMsg("Please upload photo, govt ID and degree certificate.");
     if (!quals || !bio || !rate) return setMsg("Please fill degrees, bio and base rate.");
+    if (!phone.trim() || !addr.trim() || (!citySel && !otherCity.trim()))
+      return setMsg("Please add your phone, city and residence address.");
     setBusy(true);
     setMsg("");
     const { error } = await supabase.from("profiles").update({
@@ -58,6 +70,10 @@ export default function OnboardPage() {
       avatar_url: avatar,
       kyc_id_url: govId,
       kyc_cert_url: cert,
+      phone: phone.trim(),
+      address: addr.trim(),
+      city: citySel === "other" ? otherCity.trim() : citySel,
+      requested_city: citySel === "other" ? otherCity.trim() : null,
       kyc_status: "submitted",
     }).eq("id", uid);
     setBusy(false);
@@ -131,6 +147,37 @@ export default function OnboardPage() {
           <div>
             <label className="text-sm font-medium text-slate-700">Short bio for patients</label>
             <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700">Phone (patients & platform contact)</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="+91…"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium text-slate-700">Your city</label>
+              <select value={citySel} onChange={(e) => setCitySel(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+                <option value="">Select…</option>
+                {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                <option value="other">Other city</option>
+              </select>
+            </div>
+            {citySel === "other" && (
+              <div>
+                <label className="text-sm font-medium text-slate-700">Which city?</label>
+                <input value={otherCity} onChange={(e) => setOtherCity(e.target.value)} placeholder="e.g. Delhi"
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700">Current residence address</label>
+            <textarea rows={2} value={addr} onChange={(e) => setAddr(e.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           </div>
 

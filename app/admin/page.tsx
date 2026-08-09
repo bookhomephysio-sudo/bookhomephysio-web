@@ -7,6 +7,8 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [physios, setPhysios] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [newArea, setNewArea] = useState("");
+  const [newCity, setNewCity] = useState("");
 
   const load = async () => {
     const { data } = await supabase
@@ -42,6 +44,13 @@ export default function AdminPage() {
     await load();
   };
 
+  const addArea = async () => {
+    if (!newArea || !newCity) return alert("Area name and city required");
+    const { error } = await supabase.from("areas").insert({ name: newArea, city: newCity });
+    if (error) return alert(error.message);
+    setNewArea(""); setNewCity("");
+  };
+
   if (!isAdmin) return <main className="min-h-screen bg-slate-50 p-8 text-slate-600">Admins only.</main>;
 
   return (
@@ -64,6 +73,14 @@ export default function AdminPage() {
                   <h2 className="font-semibold text-slate-900">{p.full_name}</h2>
                   <p className="text-sm text-slate-600">
                     {p.qualifications}{p.experience_years ? ` · ${p.experience_years} yrs` : ""} · ₹{p.hourly_rate}/session
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    📞 {p.phone} · 🏠 {p.city}
+                    {p.requested_city ? (
+                      <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        NEW CITY REQUEST: {p.requested_city}
+                      </span>
+                    ) : ""}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">{p.bio}</p>
                 </div>
@@ -89,6 +106,20 @@ export default function AdminPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-10 max-w-3xl rounded-2xl bg-white p-6 shadow">
+        <h2 className="text-lg font-semibold text-slate-900">Expand to a new area</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          When a physio requests a new city, add it here — it instantly becomes selectable in their My Practice page.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <input value={newArea} onChange={(e) => setNewArea(e.target.value)} placeholder="Area, e.g. Saket, New Delhi"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input value={newCity} onChange={(e) => setNewCity(e.target.value)} placeholder="City"
+            className="w-40 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <button onClick={addArea} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">Add area</button>
+        </div>
       </div>
     </main>
   );

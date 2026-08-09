@@ -17,6 +17,7 @@ export default function BookingForm({ physioId, services, areas, packages }: {
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -72,6 +73,7 @@ export default function BookingForm({ physioId, services, areas, packages }: {
   const submit = async () => {
     if (!slot) return setError("Please pick a time slot.");
     if (!address.trim()) return setError("Please enter your full address.");
+    if (!phone.trim()) return setError("Please enter your phone number.");
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return setError("Please log in first.");
     setError("");
@@ -91,6 +93,7 @@ export default function BookingForm({ physioId, services, areas, packages }: {
       status: "pending_acceptance",
       amount,
       patient_address: { full_address: address.trim() },
+      patient_phone: phone.trim(),
       service_area_id: areaId || null,
       package_id: packageId || null,
     });
@@ -180,6 +183,12 @@ export default function BookingForm({ physioId, services, areas, packages }: {
           )}
         </div>
       )}
+
+      <div>
+        <label className="text-sm font-medium text-slate-700">Your phone number</label>
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="+91…"
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
 
       <div>
         <label className="text-sm font-medium text-slate-700">Full address</label>
