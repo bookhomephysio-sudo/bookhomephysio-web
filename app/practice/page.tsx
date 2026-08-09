@@ -16,7 +16,8 @@ export default function PracticePage() {
   const [sName, setSName] = useState("");
   const [sPrice, setSPrice] = useState("");
   const [sMin, setSMin] = useState("40");
-  const [aName, setAName] = useState("");
+  const [catalog, setCatalog] = useState<any[]>([]);
+  const [aId, setAId] = useState("");
   const [aCharge, setACharge] = useState("0");
   const [hDay, setHDay] = useState(1);
   const [hStart, setHStart] = useState("08:00");
@@ -28,16 +29,19 @@ export default function PracticePage() {
   const [pDesc, setPDesc] = useState("");
 
   const load = async (pid: string) => {
-    const [sv, ar, hr, pk] = await Promise.all([
+    const [sv, ar, hr, pk, ct] = await Promise.all([
       supabase.from("services").select("*").eq("physio_id", pid).order("price"),
       supabase.from("service_areas").select("*").eq("physio_id", pid),
       supabase.from("availability").select("*").eq("physio_id", pid).order("day_of_week").order("start_time"),
       supabase.from("packages").select("*").eq("physio_id", pid),
+      supabase.from("areas").select("*").order("name"),
     ]);
     setServices(sv.data ?? []);
     setAreas(ar.data ?? []);
     setHours(hr.data ?? []);
     setPackages(pk.data ?? []);
+    setCatalog(ct.data ?? []);
+    setAId((prev) => prev || ct.data?.[0]?.id || "");
   };
 
   useEffect(() => {
@@ -65,12 +69,13 @@ export default function PracticePage() {
   };
 
   const addArea = async () => {
-    if (!aName) return alert("Area name is required");
+    const chosen = catalog.find((c) => c.id === aId);
+    if (!chosen) return alert("Pick an area");
     const { error } = await supabase.from("service_areas").insert({
-      physio_id: physioId, area_name: aName, extra_charge: Number(aCharge),
+      physio_id: physioId, area_id: aId, area_name: chosen.name, extra_charge: Number(aCharge),
     });
     if (error) return alert(error.message);
-    setAName(""); setACharge("0");
+    setACharge("0");
     await load(physioId!);
   };
 
@@ -142,8 +147,10 @@ export default function PracticePage() {
             ))}
           </div>
           <div className="mt-4 flex gap-2">
-            <input value={aName} onChange={(e) => setAName(e.target.value)} placeholder="e.g. Sector 1–15, Chandigarh"
-              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            <select value={aId} onChange={(e) => setAId(e.target.value)}
+              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+              {catalog.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
             <input value={aCharge} onChange={(e) => setACharge(e.target.value)} type="number" placeholder="+₹"
               className="w-24 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             <button onClick={addArea} className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700">Add</button>
