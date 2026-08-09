@@ -56,7 +56,7 @@ export default function BookingForm({ physioId, services, areas, packages }: {
           start.setHours(Math.floor(cur / 60), cur % 60, 0, 0);
           const s = start.getTime();
           const e = s + dur * 60000;
-          const clash = busy.some((b) => s < b.e && e > b.s);
+          const clash = busy.some((b: any) => s < b.e && e > b.s);
           if (!clash && s > Date.now()) {
             out.push(`${String(Math.floor(cur / 60)).padStart(2, "0")}:${String(cur % 60).padStart(2, "0")}`);
           }
