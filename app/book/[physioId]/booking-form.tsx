@@ -28,6 +28,18 @@ export default function BookingForm({ physioId, services, areas, packages }: {
   const amount = pkg ? Number(pkg.price) : Number(service?.price ?? 0) + Number(area?.extra_charge ?? 0);
   const today = new Date().toISOString().slice(0, 10);
 
+  // Auto-fill phone & address from the patient's saved profile
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data: prof } = await supabase
+        .from("profiles").select("phone, address").eq("id", session.user.id).single();
+      if (prof?.phone) setPhone(prof.phone);
+      if (prof?.address) setAddress(prof.address);
+    })();
+  }, []);
+
   useEffect(() => {
     if (!date || !service) { setSlots([]); setSlot(null); return; }
     (async () => {

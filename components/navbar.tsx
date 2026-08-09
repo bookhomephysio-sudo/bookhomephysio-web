@@ -45,6 +45,9 @@ export default function Navbar() {
           {userId && role !== "physio" && role !== "admin" && (
             <Link href="/bookings" className="hover:text-teal-700">My Bookings</Link>
           )}
+          {userId && (
+            <Link href="/profile" className="hover:text-teal-700">Profile</Link>
+          )}
           {userId && role === "physio" && kyc === "approved" && (
             <Link href="/physio-dashboard" className="hover:text-teal-700">Dashboard</Link>
           )}
