@@ -32,7 +32,7 @@ export default function OnboardPage() {
     setAddr(data?.address ?? "");
     setCitySel(data?.city ?? "");
     const { data: ar } = await supabase.from("areas").select("city");
-    setCities(Array.from(new Set((ar ?? []).map((a: any) => a.city)) as string[]));
+    setCities(Array.from(new Set((ar ?? []).map((a: any) => a.city as string))));
   };
 
   useEffect(() => {
